@@ -1,5 +1,5 @@
-import TabdealOrderBook from "@/components/List";
+import TabdealMarkets from "@/components/TabdealMarkets";
 
 export default function Home() {
-  return <TabdealOrderBook />;
+  return <TabdealMarkets />;
 }
