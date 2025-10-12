@@ -2,38 +2,53 @@
 
 import { useMarketStore } from "@/stores/useMarketStore";
 import { MarketInfoSymbol } from "@/types/marketTypes";
-import React, { use, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { redirect } from "next/navigation";
+import { use, useEffect } from "react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
+
 export default function Page({ params }: PageProps) {
   const { id } = use(params);
-
   const price = useMarketStore((state) => state.prices[id]);
   const subscribe = useMarketStore((s) => s.subscribe);
-  const [market, setMarket] = useState<MarketInfoSymbol | null>(null);
+
+  const TABDEL_API = process.env.NEXT_PUBLIC_TABDEL_API_URL;
+  const {
+    data: market,
+    isLoading,
+    error,
+  } = useQuery<MarketInfoSymbol[], Error, MarketInfoSymbol>({
+    queryKey: ["marketInfo", id],
+    queryFn: async () => {
+      const symbols = encodeURIComponent(JSON.stringify([id]));
+      const url = `${TABDEL_API}exchangeInfo?symbols=${symbols}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch market info");
+      return res.json();
+    },
+    select: (data) => data[0],
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
 
   useEffect(() => {
-    const fetchMarket = async () => {
-      try {
-        const symbols = encodeURIComponent(JSON.stringify([id]));
-        const url = `https://api1.tabdeal.org/r/api/v1/exchangeInfo?symbols=${symbols}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Failed to fetch market info");
-        const data = await res.json();
-        setMarket(data?.[0]);
-        subscribe([id]);
-      } catch (err) {
-        console.error("Error fetching market:", err);
-      }
-    };
-    fetchMarket();
-  }, [id, subscribe]);
+    if (market) {
+      subscribe([id]);
+    }
+  }, [market, id, subscribe]);
 
-  if (!market) {
+  if (isLoading) {
     return <p className="p-6">Loading market info...</p>;
   }
+
+  if (error) {
+    return <p className="p-6 text-red-500">Error loading market info.</p>;
+  }
+
+  if (!market) return null;
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -107,6 +122,15 @@ export default function Page({ params }: PageProps) {
           </ul>
         </div>
       )}
+
+      <div className="flex justify-center">
+        <button
+          onClick={() => redirect("/")}
+          className="rounded text-md border hover:border-solid cursor-pointer border-gray-500 border-dashed px-2 py-1"
+        >
+          go back
+        </button>
+      </div>
     </div>
   );
 }
