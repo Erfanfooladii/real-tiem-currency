@@ -40,7 +40,8 @@ For full details on authentication, endpoints, rate limits, and usage, please re
 ### 🛠 Tech Stack
 - [Next.js 15](https://nextjs.org/)  
 - [Socket.IO](https://socket.io/)  
-- [Zustand](https://zustand-demo.pmnd.rs/)  
+- [Zustand](https://zustand-demo.pmnd.rs/)
+- [TanStack Query](https://tanstack.com/query/v5/docs/react/overview)  
 - [TailwindCSS](https://tailwindcss.com/) (if used)  
 
 ---
